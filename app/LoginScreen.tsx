@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { setLoggedIn, setCurrentUser } from '@/utils/auth';
+import { saveUserProgress, getUserProgress } from '@/utils/userProgress'; // Import the functions to save and get user progress
 
-const LoginScreen = ({ navigation }: any) => {
+const LoginScreen = () => {
   const [username, setUsername] = useState('');
+  const router = useRouter();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username) return Alert.alert('Erreur', 'Nom requis.');
-    navigation.navigate('MainTabs'); // Go to main app
+
+    await setLoggedIn(true); // Set the logged-in state
+    await setCurrentUser(username); // Save the current user
+
+    const existing = await getUserProgress(username);
+    if (!existing) {
+      await saveUserProgress(username, {
+        totalReports: 0,
+        totalWeight: 0,
+        wasteTypes: [],
+        photosUploaded: 0,
+        visitedPoints: [],
+        consecutiveDays: 0,
+        invitedFriends: 0,
+        ecoTipsRead: 0,
+      });
+    }
+    // Here you would typically send the login data to your backend, but.. Y'know the drill
+    // For this example, we'll just simulate a successful login
+
+    router.replace('/(tabs)/HomeScreen'); // Go to main app
   };
 
   return (

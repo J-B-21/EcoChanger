@@ -45,6 +45,7 @@ const TabNavigator = () => {
         headerShown: true,
       })}
     >
+      {/* Define the screens for the tab navigator */} 
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Accueil' }} />
       <Tab.Screen name="Map" component={MapScreen} options={{ title: 'Carte' }} />
       <Tab.Screen name="AddReport" component={AddReportScreen} options={{ title: 'Ajouter' }} />

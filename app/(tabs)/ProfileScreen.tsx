@@ -1,42 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-
-const user = {
-  username: 'JeanEco',
-  address: 'Yaoundé',
-  totalCollected: '24 kg',
-  rank: {
-    name: '♻ Recycleur Actif',
-    icon: '♻️',
-    progress: 40, // percentage
-  },
-  badges: [
-    { id: '1', name: '🧃 Tri Plastique' },
-    { id: '2', name: '📍 Explorateur' },
-    { id: '3', name: '📷 Reporter' },
-  ],
-};
+import { useRouter } from 'expo-router';
+import { logout, getCurrentUser } from '@/utils/auth';  
+import { UserProgress, getUserProgress, calculateBadges, calculateRank } from '@/utils/userProgress';  
 
 const ProfileScreen = () => {
+  const router = useRouter();
+  const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.replace('/WelcomeScreen');
+        return;
+      }
+
+      setUsername(user);
+      const userProgress = await getUserProgress(user);
+      setProgress(userProgress);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
   const showProgressInfo = () => {
     alert('Pour devenir 🌍 Éco-Citoyen :\n10 rapports & 3 types de déchets simulés.');
   };
+
+  if (loading || !progress) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Chargement...</Text>
+      </View>
+    );
+  }
+
+  const badges = calculateBadges(progress);
+  const rank = calculateRank(progress);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>👤 Profil Utilisateur</Text>
 
       <View style={styles.card}>
-        <Text style={styles.name}>Nom : {user.username}</Text>
-        {user.address && <Text style={styles.detail}>Adresse : {user.address}</Text>}
-        <Text style={styles.detail}>Total Collecté : {user.totalCollected}</Text>
+        <Text style={styles.name}>Nom : {username}</Text>
+        <Text style={styles.detail}>Total Collecté : {progress.totalWeight} kg</Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Ton Rang Actuel :</Text>
-        <Text style={styles.rank}>{user.rank.icon} {user.rank.name}</Text>
+        <Text style={styles.rank}>{rank.icon} {rank.name}</Text>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${user.rank.progress}%` }]} />
+          <View style={[styles.progressFill, { width: `${rank.progress}%` }]} />
         </View>
         <TouchableOpacity style={styles.progressBtn} onPress={showProgressInfo}>
           <Text style={styles.btnText}>Voir comment progresser ➕</Text>
@@ -46,7 +65,7 @@ const ProfileScreen = () => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>🎖️ Tes Badges :</Text>
         <FlatList
-          data={user.badges}
+          data={badges.map((b, index) => ({ id: index.toString(), name: b }))}
           keyExtractor={(item) => item.id}
           numColumns={2}
           columnWrapperStyle={styles.badgeRow}
@@ -57,6 +76,18 @@ const ProfileScreen = () => {
           )}
         />
       </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={async () => {
+        await logout();
+        router.replace('/WelcomeScreen');
+      }}>
+        <Text style={styles.logoutText}>🚪 Se Déconnecter</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.secretButton}
+        onPress={() => router.push('/SecretProgress')}
+      >
+        <Text style={styles.secretText}>🛠️ Dev: Modifier Progrès</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -142,5 +173,28 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  logoutButton: {
+  marginTop: 20,
+  backgroundColor: '#e74c3c',
+  padding: 15,
+  borderRadius: 10,
+  alignItems: 'center',
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  secretButton: {
+    marginTop: 10,
+    backgroundColor: '#34495e',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  secretText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

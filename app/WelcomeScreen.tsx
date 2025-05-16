@@ -1,17 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-const WelcomeScreen = ({ navigation }: any) => {
+const WelcomeScreen = () => {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🌿 Bienvenue sur EcoChanger</Text>
       <Text style={styles.subtitle}>Simule la collecte, progresse, et deviens un éco-héros !</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity style={styles.button} onPress={() => router.push('/LoginScreen')}>
         <Text style={styles.buttonText}>Se connecter</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.button, styles.signup]} onPress={() => navigation.navigate('Signup')}>
+      <TouchableOpacity style={[styles.button, styles.signup]} onPress={() => router.push('/SignupScreen')}>
         <Text style={styles.buttonText}>Créer un compte</Text>
       </TouchableOpacity>
     </View>
